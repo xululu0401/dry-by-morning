@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>睡前晾的那一杆</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #eef1f4; color: #1f2a33; line-height: 1.6; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 14px 40px; }
+  h1 { font-size: 26px; letter-spacing: 1px; }
+  .lead { color: #4d5b66; font-size: 14px; margin: 4px 0 14px; }
+  .card { background: #fff; border-radius: 10px; padding: 14px; border: 1px solid #d6dde3; margin-bottom: 14px; min-width: 0; }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; overflow-wrap: anywhere; }
+  label { font-size: 12px; color: #4d5b66; display: block; overflow-wrap: anywhere; }
+  input, textarea, select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #b8c3cc; border-radius: 6px; width: 100%; min-width: 0; background: #fff; font-variant-numeric: tabular-nums; }
+  textarea { resize: vertical; min-height: 190px; line-height: 1.6; font-family: ui-monospace, Menlo, "PingFang SC", monospace; }
+  .inGrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; }
+  .g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .g3 > div { min-width: 0; }
+  .bad { border-color: #b3412f !important; background: #fff0ec !important; }
+  button { font: inherit; font-size: 13px; padding: 6px 11px; border-radius: 6px; border: 1px solid #2f5d7c; background: #2f5d7c; color: #fff; cursor: pointer; }
+  button.ghost { background: #fff; color: #2f5d7c; }
+  .presets, .dl { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .err { display: none; background: #fff0ec; border: 1px solid #ecb7aa; color: #8e2b1c; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; overflow-wrap: anywhere; }
+  .muted { color: #73808a; font-size: 12px; }
+  /* 出门那一刻的小票 */
+  .ticket { background: #fffdf6; border: 1px dashed #9aa7b1; border-radius: 4px; padding: 14px 16px; position: relative; }
+  .ticket .hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border-bottom: 1px dashed #c4ccd2; padding-bottom: 8px; margin-bottom: 8px; }
+  .ticket .when { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stamp { display: inline-block; border: 3px solid #2f6b4f; color: #2f6b4f; border-radius: 8px; padding: 2px 10px; font-weight: 800; font-size: 17px; transform: rotate(-3deg); white-space: nowrap; }
+  .stamp.wear { border-color: #a5741d; color: #a5741d; } .stamp.no { border-color: #b3412f; color: #b3412f; }
+  #sumTxt { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+  .rows { margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 4px 0; border-bottom: 1px dotted #dfe4e8; font-size: 14px; }
+  .row span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row.w span:first-child { font-weight: 700; }
+  .row .ok { color: #2f6b4f; } .row .no { color: #b3412f; font-weight: 700; }
+  #facts { margin: 10px 0 0 18px; font-size: 13px; color: #4d5b66; } #facts li { margin: 2px 0; overflow-wrap: anywhere; }
+  #tl, #hum { width: 100%; height: auto; display: block; }
+  #need { font-size: 14px; margin-top: 6px; overflow-wrap: anywhere; }
+  #sugs { display: grid; gap: 8px; }
+  .sug { display: flex; gap: 10px; align-items: center; justify-content: space-between; border: 1px solid #d6dde3; border-radius: 6px; padding: 8px 10px; }
+  .sug span { min-width: 0; overflow-wrap: anywhere; font-size: 14px; } .sug button { flex: none; }
+  .how { font-size: 13px; } .how p { margin: 6px 0; }
+  @media (max-width: 760px) { .inGrid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 520px) { .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sug { flex-direction: column; align-items: stretch; } #sumTxt { font-size: 15px; } .ticket .when { font-size: 19px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>睡前晾的那一杆</h1>
+  <p class="lead">睡前把一缸衣服晾在屋里，明早出门要穿的那几件干不干得了？把每件衣服的干重、料子、怎么挂写下来，再填屋子多大、通不通风、开不开除湿机，这里按一夜的时间线把每件衣服的水一点点算干，告诉你出门那一刻哪件还湿、差多少克水、改什么来得及。默认例子是虚构的。</p>
+
+  <div class="card">
+    <div class="inGrid">
+      <div>
+        <label for="items">每行一件：名字 干重(克) 料子 挂法，明早要穿的加「要穿」；称过湿重可以加「湿重=520」</label>
+        <textarea id="items" maxlength="2000" spellcheck="false"></textarea>
+        <p class="muted">料子：棉 / 牛仔 / 毛巾 / 化纤 / 羊毛。挂法：撑开 / 衣架 / 对折（不写算衣架）。都不标「要穿」就按全部要干来看。</p>
+      </div>
+      <div>
+        <div class="g3">
+          <div><label for="start">开始晾</label><input id="start" maxlength="5"></div>
+          <div><label for="wear">出门时刻</label><input id="wear" maxlength="5"></div>
+          <div><label for="dryPct">剩水≤干重的 %算干</label><input id="dryPct" inputmode="decimal" maxlength="5"></div>
+          <div><label for="temp">屋里温度 °C</label><input id="temp" inputmode="decimal" maxlength="5"></div>
+          <div><label for="rh">开始时湿度 %</label><input id="rh" inputmode="decimal" maxlength="5"></div>
+          <div><label for="vol">晾的地方容积 m³</label><input id="vol" inputmode="decimal" maxlength="6"></div>
+          <div><label for="ach">每小时换气次数</label><input id="ach" inputmode="decimal" maxlength="5"></div>
+          <div><label for="wind">风</label><select id="wind"><option value="still">不通风</option><option value="window">开窗有点风</option><option value="fan">风扇对着吹</option></select></div>
+          <div><label for="dehum">除湿机 升/天（0=没有）</label><input id="dehum" inputmode="decimal" maxlength="5"></div>
+          <div><label for="eta">除湿机打折（标称常按 30 °C 80%）</label><input id="eta" inputmode="decimal" maxlength="5"></div>
+        </div>
+        <p class="muted" style="margin-top:8px">换气次数：关门关窗约 0.3–0.5，门窗开条缝约 1–2，开窗对流 5 以上。容积：卫生间 8–12，封闭阳台 15–25 m³。</p>
+      </div>
+    </div>
+    <div class="presets" id="presets"><button id="reset" class="ghost">恢复默认</button></div>
+  </div>
+
+  <div class="err" id="error"></div>
+
+  <div id="out">
+    <div class="card ticket">
+      <div class="hd"><span class="when" id="when"></span><span class="stamp" id="stamp"></span></div>
+      <div id="sumTxt"></div>
+      <div class="rows" id="rows"></div>
+      <ul id="facts"></ul>
+    </div>
+
+    <div class="card">
+      <h2>这一夜：每件衣服还剩多少水</h2>
+      <canvas id="tl" width="960" height="400"></canvas>
+      <p class="muted">每条是一件衣服，颜色越深水越多，竖线是出门时刻；加粗名字的是要穿的。</p>
+    </div>
+
+    <div class="card">
+      <h2>屋里湿度</h2>
+      <canvas id="hum" width="960" height="220"></canvas>
+      <p class="muted" id="humNote"></p>
+    </div>
+
+    <div class="card" id="sugCard">
+      <h2>改一样试试（点一下代回重算）</h2>
+      <div id="sugs"></div>
+      <p id="need"></p>
+    </div>
+
+    <div class="card">
+      <h2>带走</h2>
+      <div class="dl">
+        <button id="dlPNG">结果卡 PNG</button><button id="dlCSV" class="ghost">CSV</button><button id="dlMD" class="ghost">Markdown</button><button id="dlJSON" class="ghost">JSON 备份</button>
+      </div>
+      <p class="muted" style="margin-top:6px">输入自动存在这台设备的浏览器里，不上传。</p>
+    </div>
+  </div>
+
+  <div class="card how">
+    <h2>怎么算的</h2>
+    <p>每件衣服的水 = 湿重 − 干重；没称湿重就按料子估甩干后还含多少（棉 60%、牛仔 65%、毛巾 90%、化纤 30%、羊毛 70%，占干重）。透气面积 = 2（正反面）× 干重 ÷ 面料克重 × 挂法系数（撑开 1、衣架 0.8、对折 0.5）。</p>
+    <p>水多的时候，衣服表面停在湿球温度，每平方米每小时蒸发的水 = 传质系数 ×（湿球温度下的饱和水汽 − 屋里水汽）；传质系数由风定（不通风、开窗有点风、风扇对着吹）。剩水少于一个临界量后，越干越慢，按剩水比例变慢。</p>
+    <p>衣服出的水全进屋里的空气，换气把它往外送，除湿机按标称 × 打折 × 湿度系数（40% 以下停、80% 以上满额）除掉。所以屋子小、不通风时湿度会一路涨到快饱和，风扇吹得再猛也干不动。</p>
+    <p>边界：温度当作整夜不变，不算太阳直晒、蒸发吸热让屋里变冷、墙面结露、衣服挤在一起互相挡风。面料克重和含水都是典型值，是设计选择；结果是估算，赶时间的衣服以手摸为准。</p>
+  </div>
+</div>
+
+  <script>
+/* 睡前晾的那一杆 · 计算核心
+ * 场景：睡前把一缸衣服晾在屋里（卫生间、封闭阳台、客厅），想知道明早出门时要穿的那几件干没干、哪件最慢、改点什么来得及。
+ * 模型（设计选择，不是定论）：
+ *   · 每件衣服的水 = 湿重 − 干重（干重是平常放在屋里称的重量，所以不管纤维本身的回潮）。没填湿重时按料子的「甩干后含水」估。
+ *   · 透气面积 = 2（正反两面）× 干重 ÷ 面料克重 × 挂法系数（撑开 1、衣架 0.8、对折 0.5）。
+ *   · 恒速段：表面保持湿球温度，每平方米每小时蒸发 = h_m ×（湿球温度下的饱和水汽密度 − 屋里水汽密度）× 3600，
+ *     h_m = h ÷（ρc_p · Le^(2/3)），h 由通风方式定（不通风 4、开窗有点风 7、风扇对着吹 12 W/m²K）。
+ *   · 降速段：剩水低于「临界含水」后，蒸发按剩水 ÷ 临界含水线性变慢。
+ *   · 屋里是一个整体：衣服蒸发的水进屋里空气，换气按「换气次数 × 容积」把屋里的水汽换成开始时那样的空气，
+ *     除湿机按标称每天除水 × 打折 × 湿度系数（湿度 40% 以下停、80% 以上满额，中间线性）除水。温度全程不变。
+ *   · 剩水 ≤ 干重 × 「算干」比例 就算干了。
+ * 不做：太阳直晒与辐射、蒸发吸热让屋里变冷、墙面结露、衣服挤在一起互相挡风、烘干机、面料能不能晾的判断。 */
+(function (root) {
+  'use strict';
+  function Bad(message, field) { const e = new Error(message); e.field = field; return e; }
+  const KEYS = ['items', 'temp', 'rh', 'vol', 'ach', 'wind', 'dehum', 'eta', 'start', 'wear', 'dryPct'];
+  const MAX_ITEMS = 20, MAX_NAME = 12, MAX_H = 48;
+
+  /* 面料：克重 g/m²、甩干后含水（占干重）、临界含水（占干重）。都是设计选择的典型值。 */
+  const FAB = {
+    '棉': { dens: 150, ret: 0.6, xc: 0.25 },
+    '牛仔': { dens: 400, ret: 0.65, xc: 0.25 },
+    '毛巾': { dens: 450, ret: 0.9, xc: 0.3 },
+    '化纤': { dens: 120, ret: 0.3, xc: 0.1 },
+    '羊毛': { dens: 350, ret: 0.7, xc: 0.3 },
+  };
+  const FAB_ALIAS = { '纯棉': '棉', '全棉': '棉', '牛仔布': '牛仔', '浴巾': '毛巾', '毛圈': '毛巾', '涤纶': '化纤', '速干': '化纤', '尼龙': '化纤', '毛线': '羊毛', '针织毛': '羊毛' };
+  const HANG = { '撑开': 1.0, '衣架': 0.8, '对折': 0.5 };
+  const HANG_ALIAS = { '平铺': '撑开', '夹子': '撑开', '展开': '撑开', '挂': '衣架', '搭杆': '对折', '搭着': '对折' };
+  const WIND = { still: { name: '不通风', h: 4 }, window: { name: '开窗有点风', h: 7 }, fan: { name: '风扇对着吹', h: 12 } };
+  const RHOCP = 1206; /* 空气 ρ·c_p，J/(m³·K) */
+  const LE23 = Math.pow(0.87, 2 / 3);
+
+  function fmt(x, d) { if (x == null || !isFinite(x)) return '—'; const s = (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d); return d > 0 ? s.replace(/\.?0+$/, '') : s; }
+  const f0 = (x) => (x == null || !isFinite(x) ? '—' : String(Math.round(x)));
+  const gram = (x) => (x > 0 && x < 1 ? '不到 1' : f0(x));
+  const f1 = (x) => (x == null || !isFinite(x) ? '—' : (Math.round(x * 10) / 10).toFixed(1));
+
+  /* ── 湿空气 ── */
+  function esat(T) { return 610.94 * Math.exp(17.625 * T / (T + 243.04)); } /* Pa，Magnus（Alduchov–Eskridge） */
+  function rhoSat(T) { return esat(T) / (461.5 * (T + 273.15)) * 1000; } /* g/m³ */
+  function latent(T) { return 2501 - 2.36 * T; } /* J/g */
+  /* 湿球温度：h(T−Ts) = h_m·L·(ρs(Ts) − ρv)，h_m = h/(ρc_p Le^(2/3)) → 与 h 无关 */
+  function wetBulb(T, rv) {
+    const f = (Ts) => (T - Ts) - latent(Ts) / (RHOCP * LE23) * (rhoSat(Ts) - rv);
+    let a = T - 45, b = T;
+    if (f(b) >= 0) return T;
+    for (let k = 0; k < 60; k++) { const m = (a + b) / 2; if (f(m) > 0) a = m; else b = m; }
+    return (a + b) / 2;
+  }
+  function hm(h) { return h / (RHOCP * LE23); } /* m/s */
+
+  function num(v, name, field, lo, hi) {
+    const t = String(v).trim();
+    if (!/^-?\d+(\.\d+)?$/.test(t)) throw Bad(name + '要写数字', field);
+    const x = +t;
+    if (x < lo || x > hi) throw Bad(name + '在 ' + lo + ' 到 ' + hi + ' 之间', field);
+    return x;
+  }
+  function clock(v, name, field) {
+    const m = String(v).trim().replace('：', ':').match(/^(\d{1,2}):(\d{2})$/);
+    if (!m || +m[1] > 23 || +m[2] > 59) throw Bad(name + '写成 23:00 这样的时刻', field);
+    return +m[1] * 60 + +m[2];
+  }
+  function parseItems(text) {
+    const lines = String(text).split(/\r?\n/).map((s, i) => ({ s: s.replace(/#.*$/, '').trim(), n: i + 1 })).filter((x) => x.s);
+    if (!lines.length) throw Bad('每行写一件：名字 干重(克) 料子 挂法，要穿的加「要穿」', 'items');
+    if (lines.length > MAX_ITEMS) throw Bad('最多 ' + MAX_ITEMS + ' 件，现在 ' + lines.length + ' 件', 'items');
+    const names = new Set();
+    return lines.map(({ s, n }) => {
+      const tk = s.split(/[\s　,，]+/).filter(Boolean);
+      const name = tk[0];
+      if (/^\d/.test(name)) throw Bad('第 ' + n + ' 行要先写名字，再写干重', 'items');
+      if (name.length > MAX_NAME) throw Bad('第 ' + n + ' 行名字最多 ' + MAX_NAME + ' 个字', 'items');
+      if (names.has(name)) throw Bad('第 ' + n + ' 行名字「' + name + '」重复了，同样的衣服写成「T恤1」「T恤2」', 'items');
+      names.add(name);
+      let dry = null, fab = null, hang = null, wear = false, wet = null;
+      for (const t0 of tk.slice(1)) {
+        const t = t0.replace(/克$|g$/i, '');
+        let m;
+        if ((m = t0.match(/^(湿重|湿)[=＝:：]?(\d+(\.\d+)?)(克|g)?$/i))) { wet = +m[2]; continue; }
+        if (/^\d+(\.\d+)?$/.test(t)) { if (dry != null) throw Bad('第 ' + n + ' 行有两个数字，湿重写成「湿重=980」', 'items'); dry = +t; continue; }
+        if (FAB[t0] || FAB_ALIAS[t0]) { fab = FAB[t0] ? t0 : FAB_ALIAS[t0]; continue; }
+        if (HANG[t0] || HANG_ALIAS[t0]) { hang = HANG[t0] ? t0 : HANG_ALIAS[t0]; continue; }
+        if (t0 === '要穿' || t0 === '明天穿' || t0 === '*') { wear = true; continue; }
+        throw Bad('第 ' + n + ' 行看不懂「' + t0 + '」：料子写 ' + Object.keys(FAB).join('/') + '，挂法写 ' + Object.keys(HANG).join('/'), 'items');
+      }
+      if (dry == null) throw Bad('第 ' + n + ' 行缺干重（克）', 'items');
+      if (dry < 5 || dry > 5000) throw Bad('第 ' + n + ' 行干重在 5 到 5000 克之间', 'items');
+      if (!fab) throw Bad('第 ' + n + ' 行缺料子：' + Object.keys(FAB).join('/'), 'items');
+      if (!hang) hang = '衣架';
+      if (wet != null && (wet <= dry || wet > dry * 4)) throw Bad('第 ' + n + ' 行湿重要比干重大，且不超过干重的 4 倍', 'items');
+      const F = FAB[fab];
+      const W0 = wet != null ? wet - dry : dry * F.ret;
+      return { name, dry, fab, hang, wear, wet, W0, measured: wet != null, Wc: dry * F.xc, area: 2 * dry / F.dens * HANG[hang] };
+    });
+  }
+  function parse(inp) {
+    for (const k of KEYS) if (inp[k] == null) throw Bad('缺少输入 ' + k, k);
+    const items = parseItems(inp.items);
+    const temp = num(inp.temp, '屋里温度', 'temp', 0, 40);
+    const rh = num(inp.rh, '开始时湿度', 'rh', 10, 95);
+    const vol = num(inp.vol, '晾的地方容积', 'vol', 3, 500);
+    const ach = num(inp.ach, '每小时换气次数', 'ach', 0, 30);
+    if (!WIND[inp.wind]) throw Bad('通风方式不对', 'wind');
+    const dehum = num(inp.dehum, '除湿机每天除水', 'dehum', 0, 60);
+    const eta = num(inp.eta, '除湿机打折', 'eta', 0.1, 1);
+    const dryPct = num(inp.dryPct, '算干的标准', 'dryPct', 0.5, 10);
+    const s = clock(inp.start, '开始晾的时刻', 'start'), w = clock(inp.wear, '出门时刻', 'wear');
+    let dur = (w - s + 1440) % 1440; if (dur === 0) dur = 1440;
+    return { items, temp, rh, vol, ach, wind: inp.wind, dehum, eta, dryPct, startMin: s, wearMin: w, wearH: dur / 60 };
+  }
+
+  /* ── 推演 ── */
+  function simulate(D, opt) {
+    opt = opt || {};
+    const T = D.temp, rs = rhoSat(T), rho0 = rs * D.rh / 100;
+    const hmh = hm(WIND[D.wind].h) * 3600; /* m/h */
+    const it = D.items, n = it.length;
+    const W = it.map((x) => x.W0), thr = it.map((x) => x.dry * D.dryPct / 100);
+    const dryAt = it.map((x, i) => (W[i] <= thr[i] ? 0 : null));
+    const Dgh = D.dehum * 1000 / 24 * D.eta;
+    const drive0 = Math.max(0, rhoSat(wetBulb(T, rho0)) - rho0);
+    let sumA = 0, tauI = Infinity;
+    it.forEach((x) => { sumA += x.area; if (drive0 > 0) tauI = Math.min(tauI, x.Wc / (hmh * x.area * drive0)); });
+    /* 屋里水汽的时间常数：V /（Σ h_m A · dρs/dρ 近似 1 + 换气）；步长取 1 分钟与两个时间常数 1/5 里最小的 */
+    const tauR = D.vol / (hmh * sumA + D.ach * D.vol + 1e-9);
+    const dt = opt.dt || Math.min(1 / 60, tauR / 5, tauI / 5);
+    const horizon = opt.horizon || MAX_H;
+    let rho = rho0, t = 0, evap = 0, vent = 0, dh = 0, cond = 0, maxRH = D.rh;
+    const samples = [], every = 1 / 12;
+    let nextS = 0, wearW = null, wearRH = null;
+    const snap = () => { samples.push({ t, rh: rho / rs * 100, W: W.slice() }); };
+    snap(); nextS = every;
+    while (t < horizon - 1e-12) {
+      const h = Math.min(dt, horizon - t);
+      const drive = Math.max(0, rhoSat(wetBulb(T, rho)) - rho);
+      let E = 0;
+      const Wp = W.slice();
+      /* 一步之内屋里水汽当作不变：恒速段线性、降速段指数，按解析式走完这一步（显式欧拉会让降速段偏快） */
+      const cross = new Array(n).fill(null);
+      for (let i = 0; i < n; i++) {
+        if (W[i] <= 0) continue;
+        const r = hmh * it[i].area * drive, Wc = it[i].Wc;
+        if (r <= 0) continue;
+        const w0 = W[i];
+        let w = w0, used = 0;
+        if (w > Wc) { const tc = (w - Wc) / r; if (tc >= h) { w -= r * h; used = h; } else { w = Wc; used = tc; } }
+        if (used < h) w = w * Math.exp(-r / Wc * (h - used));
+        /* 越过「算干」门槛的时刻 */
+        if (dryAt[i] == null && w <= thr[i]) {
+          cross[i] = thr[i] >= Wc ? t + (w0 - thr[i]) / r : t + Math.max(0, (w0 - Wc) / r) + Wc / r * Math.log(Math.min(w0, Wc) / thr[i]);
+        }
+        E += w0 - w; W[i] = w;
+      }
+      const RH = rho / rs * 100;
+      const dRate = Dgh * Math.max(0, Math.min(1, (RH - 40) / 40));
+      const v = D.ach * D.vol * (rho - rho0) * h;
+      const dd = dRate * h;
+      rho += (E - v - dd) / D.vol;
+      evap += E; vent += v; dh += dd;
+      if (rho > rs) { cond += (rho - rs) * D.vol; rho = rs; }
+      if (rho < 0) rho = 0;
+      const tn = t + h;
+      for (let i = 0; i < n; i++) if (cross[i] != null) dryAt[i] = Math.min(tn, Math.max(t, cross[i]));
+      if (wearW == null && tn >= D.wearH - 1e-12) {
+        const fr = (D.wearH - t) / h;
+        wearW = Wp.map((a, i) => a + (W[i] - a) * fr);
+        wearRH = (rho / rs * 100);
+      }
+      t = tn;
+      maxRH = Math.max(maxRH, rho / rs * 100);
+      if (t >= nextS - 1e-9) { snap(); nextS += every; }
+      if (opt.stopWhenDry && dryAt.every((x) => x != null) && t >= D.wearH) break;
+    }
+    if (wearW == null) wearW = W.slice();
+    return { dryAt, wearW, wearRH, samples, maxRH, endRH: rho / rs * 100, evap, vent, dh, cond, rho, W, W0: it.map((x) => x.W0), roomGain: (rho - rho0) * D.vol, dt, rho0, drive0, thr };
+  }
+
+  function clk(D, h) {
+    if (h == null) return '—';
+    const m = Math.round(D.startMin + h * 60), day = Math.floor(m / 1440), mm = ((m % 1440) + 1440) % 1440;
+    const z = (x) => String(x).padStart(2, '0');
+    return (day === 0 ? '' : day === 1 ? '次日 ' : day === 2 ? '后天 ' : '第 ' + (day + 1) + ' 天 ') + z(Math.floor(mm / 60)) + ':' + z(mm % 60);
+  }
+  const VERDICT = { ok: '都能干', wear: '要穿的能干', no: '要穿的干不了' };
+
+  function core(D) {
+    const S = simulate(D);
+    const it = D.items, n = it.length;
+    const wearSet = it.some((x) => x.wear) ? it.map((x) => x.wear) : it.map(() => true);
+    const st = it.map((x, i) => {
+      const w = S.wearW[i], ok = S.dryAt[i] != null && S.dryAt[i] <= D.wearH + 1e-9;
+      return { i, name: x.name, wear: wearSet[i], W0: x.W0, wearW: w, ok, dryAt: S.dryAt[i], lack: Math.max(0, w - S.thr[i]), pct: x.W0 > 0 ? w / x.W0 : 0 };
+    });
+    const wearItems = st.filter((x) => x.wear);
+    const okAll = st.every((x) => x.ok), okWear = wearItems.every((x) => x.ok);
+    const verdict = okAll ? 'ok' : okWear ? 'wear' : 'no';
+    /* 同时干的（同料子同挂法时干的时刻完全相同，只差浮点末位）取清单里靠前的那件，不同引擎结果一致 */
+    const tOf = (x) => (x.dryAt == null ? Infinity : x.dryAt);
+    const late = (arr) => arr.reduce((b, x) => (b == null || tOf(x) > tOf(b) + 1e-6 ? x : b), null);
+    const lastWear = late(wearItems), lastAll = late(st);
+    const R = { D, S, st, verdict, stamp: VERDICT[verdict], nOk: st.filter((x) => x.ok).length, nWear: wearItems.length, nWearOk: wearItems.filter((x) => x.ok).length, lastWear, lastAll, anyMarked: it.some((x) => x.wear), totalW0: it.reduce((s, x) => s + x.W0, 0) };
+    R.summary = summary(R); R.facts = facts(R);
+    return R;
+  }
+  function whenDry(R, x) { return x.dryAt == null ? MAX_H + ' 小时内干不了' : clk(R.D, x.dryAt) + ' 干'; }
+  function summary(R) {
+    const D = R.D, wt = clk(D, D.wearH);
+    let a = wt + ' 出门时，' + D.items.length + ' 件里干了 ' + R.nOk + ' 件。';
+    if (R.anyMarked) {
+      if (R.verdict === 'no') {
+        const bad = R.st.filter((x) => x.wear && !x.ok);
+        /* 最多点名 3 件，按出门时剩水从多到少；其余只报件数 */
+        const top = bad.slice().sort((p, q) => q.wearW - p.wearW || p.i - q.i), shown = top.length > 3 ? top.slice(0, 3) : bad;
+        a += '要穿的 ' + R.nWear + ' 件里' + (top.length > 3 ? '有 ' + top.length + ' 件没干，最湿的' : '') + shown.map((x) => '「' + x.name + '」还剩 ' + gram(x.wearW) + ' 克水（' + whenDry(R, x) + '）').join('，') + (top.length > 3 ? '，其余 ' + (top.length - 3) + ' 件见清单' : '') + '。';
+      } else a += '要穿的 ' + R.nWear + ' 件都干了，最慢的「' + R.lastWear.name + '」' + clk(D, R.lastWear.dryAt) + ' 干。';
+    } else if (R.verdict === 'no') a += '最慢的「' + R.lastAll.name + '」还剩 ' + gram(R.lastAll.wearW) + ' 克水（' + whenDry(R, R.lastAll) + '）。';
+    if (R.verdict !== 'no' && !R.st.every((x) => x.ok) && R.anyMarked) a += '不穿的里最慢是「' + R.lastAll.name + '」（' + whenDry(R, R.lastAll) + '）。';
+    a += '屋里湿度最高到 ' + f0(R.S.maxRH) + '%。';
+    return a;
+  }
+  function facts(R) {
+    const D = R.D, S = R.S, F = [];
+    R.st.forEach((x) => {
+      const it = D.items[x.i];
+      F.push(x.name + '：' + (it.measured ? '称的' : '按' + it.fab + '估的') + ' ' + f0(x.W0) + ' 克水，' + (x.ok ? clk(D, x.dryAt) + ' 干了' : '出门时还剩 ' + gram(x.wearW) + ' 克（' + whenDry(R, x) + '）'));
+    });
+    F.push('一共 ' + f0(R.totalW0) + ' 克水；到出门' + '蒸发了 ' + f0(sumUpTo(R)) + ' 克');
+    F.push('屋里湿度从 ' + f0(D.rh) + '% 开始，最高 ' + f0(S.maxRH) + '%' + (S.maxRH >= 99 ? '，接近饱和，衣服基本不往外出水了' : ''));
+    return F;
+  }
+  function sumUpTo(R) { return R.st.reduce((s, x) => s + (x.W0 - x.wearW), 0); }
+  function calculate(inp) { return core(parse(inp)); }
+
+  /* ── 反推：除湿机至少多大，要穿的才能在出门前干 ── */
+  function needDehum(inp, R) {
+    if (R.verdict !== 'no') return null;
+    const test = (L) => { const r = calculate(Object.assign({}, inp, { dehum: String(L) })); return r.verdict !== 'no'; };
+    if (!test(60)) return { L: null };
+    /* 在 0.1 升的格子上二分：lo 不够、hi 够 */
+    let lo = Math.round(+inp.dehum * 10), hi = 600;
+    if (test(lo / 10)) return { L: lo / 10 };
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (test(m / 10)) hi = m; else lo = m; }
+    return { L: hi / 10 };
+  }
+
+  /* ── 可代回的建议 ── */
+  function brief(R2) {
+    const t = R2.anyMarked ? '要穿的 ' + R2.nWear + ' 件干了 ' + R2.nWearOk + ' 件' : '干了 ' + R2.nOk + ' 件';
+    const lw = R2.anyMarked ? R2.lastWear : R2.lastAll;
+    return t + '，最慢的「' + lw.name + '」' + whenDry(R2, lw) + '，湿度最高 ' + f0(R2.S.maxRH) + '%';
+  }
+  function editLine(text, name, fn) {
+    return String(text).split(/\r?\n/).map((l) => { const tk = l.replace(/#.*$/, '').trim().split(/[\s　,，]+/); return tk[0] === name ? fn(l) : l; }).filter((l) => l != null).join('\n');
+  }
+  function suggestions(inp, R) {
+    const out = [];
+    if (R.verdict === 'ok') return out;
+    const tryOne = (id, patch, label) => {
+      const apply = Object.assign({}, inp, patch);
+      try { const R2 = calculate(apply); out.push({ id, text: label + '：' + brief(R2), apply, R2 }); } catch (e) { /* 算不出就不给 */ }
+    };
+    const D = R.D;
+    if (D.wind !== 'fan') tryOne('fan', { wind: 'fan' }, '开风扇对着吹');
+    if (D.ach < 2) tryOne('ach', { ach: '2' }, '门窗开条缝，每小时换气 2 次');
+    if (D.dehum < 12) tryOne('dehum', { dehum: '12' }, '开一台每天除 12 升的除湿机');
+    const target = R.anyMarked ? R.lastWear : R.lastAll;
+    if (target && !target.ok) {
+      const it = D.items[target.i];
+      const better = it.hang === '对折' ? '衣架' : it.hang === '衣架' ? '撑开' : null;
+      if (better) tryOne('hang', { items: editLine(inp.items, it.name, (l) => (/(对折|衣架|撑开|平铺|夹子|展开|搭杆|搭着)/.test(l) ? l.replace(/(对折|衣架|撑开|平铺|夹子|展开|搭杆|搭着)/, better) : l + ' ' + better)) }, '「' + it.name + '」改成' + better);
+    }
+    /* 不穿的里水最多的那件挪去别处晾 */
+    const others = R.st.filter((x) => !x.wear);
+    if (R.anyMarked && others.length && D.items.length > 1) {
+      const big = others.reduce((b, x) => (x.W0 > b.W0 ? x : b));
+      tryOne('move', { items: editLine(inp.items, big.name, () => null) }, '「' + big.name + '」挪去别处晾');
+    }
+    return out;
+  }
+
+  /* ── 导出 ── */
+  function csvEsc(s) { s = String(s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  function toCSV(R, stamp) {
+    const D = R.D;
+    const L = ['睡前晾的那一杆 生成时间 ' + stamp + ' ' + D.temp + '°C 湿度' + D.rh + '% 容积' + D.vol + 'm³ 换气' + D.ach + '次/时 ' + WIND[D.wind].name + ' 除湿' + D.dehum + '升/天 ' + R.stamp];
+    L.push(['衣服', '要穿', '干重(克)', '料子', '挂法', '开始含水(克)', '出门时剩水(克)', '干的时刻', '出门前干没干'].join(','));
+    R.st.forEach((x) => { const it = D.items[x.i]; L.push([it.name, x.wear ? '是' : '否', fmt(it.dry, 1), it.fab, it.hang, fmt(x.W0, 1), fmt(x.wearW, 1), x.dryAt == null ? MAX_H + '小时内干不了' : clk(D, x.dryAt), x.ok ? '干了' : '没干'].map(csvEsc).join(',')); });
+    L.push('', ['时刻', '屋里湿度%'].concat(D.items.map((x) => x.name + '剩水(克)')).map(csvEsc).join(','));
+    R.S.samples.filter((s, k) => k % 6 === 0 && s.t <= Math.max(D.wearH, 1) + 1e-9).forEach((s) => L.push([clk(D, s.t), fmt(s.rh, 1)].concat(s.W.map((w) => fmt(w, 1))).map(csvEsc).join(',')));
+    return L.join('\n') + '\n';
+  }
+  function toMD(R, stamp, sg, need) {
+    const D = R.D;
+    const L = ['# 睡前晾的那一杆', '', '生成时间：' + stamp + '　' + D.temp + ' °C｜湿度 ' + D.rh + '%｜' + D.vol + ' m³｜换气 ' + D.ach + ' 次/时｜' + WIND[D.wind].name + '｜除湿机 ' + D.dehum + ' 升/天', '', '**' + R.stamp + '：' + R.summary + '**', ''];
+    R.facts.forEach((f) => L.push('- ' + f));
+    L.push('', '| 衣服 | 要穿 | 开始含水 | 出门时剩水 | 干的时刻 |', '|---|---|---|---|---|');
+    R.st.forEach((x) => L.push('| ' + x.name.replace(/\|/g, '／') + ' | ' + (x.wear ? '是' : '') + ' | ' + f0(x.W0) + ' 克 | ' + f0(x.wearW) + ' 克 | ' + (x.dryAt == null ? MAX_H + ' 小时内干不了' : clk(D, x.dryAt)) + ' |'));
+    if (need) L.push('', need.L == null ? '除湿机开到每天 60 升，要穿的也赶不上出门。' : '要穿的赶上出门，除湿机至少每天除 ' + fmt(need.L, 1) + ' 升（按现在的打折 ' + fmt(D.eta, 2) + '）。');
+    if (sg && sg.length) { L.push('', '## 改一样试试', ''); sg.forEach((s) => L.push('- ' + s.text)); }
+    L.push('', '面料克重、甩干含水、通风系数都是典型值，是设计选择；温度当作不变，不算墙面结露和衣服互相挡风。默认例子是虚构的。');
+    return L.join('\n') + '\n';
+  }
+
+  const DEFAULT = {
+    items: [
+      '白衬衫 220 棉 衣架 要穿',
+      '牛仔裤 650 牛仔 对折',
+      'T恤 160 棉 衣架',
+      '速干衣 140 化纤 衣架',
+      '浴巾 500 毛巾 对折',
+      '袜子 40 棉 撑开 要穿',
+      '毛衣 450 羊毛 撑开',
+      '秋裤 250 棉 衣架',
+    ].join('\n'),
+    temp: '18', rh: '65', vol: '20', ach: '0.5', wind: 'still', dehum: '0', eta: '0.5', start: '23:00', wear: '07:30', dryPct: '2',
+  };
+  const PRESETS = [
+    ['默认：封闭阳台一缸衣服', DEFAULT],
+    ['关门的卫生间', Object.assign({}, DEFAULT, { vol: '8', ach: '0.3' })],
+    ['开除湿机', Object.assign({}, DEFAULT, { dehum: '12' })],
+    ['称过湿重的两件', Object.assign({}, DEFAULT, { items: '工作服 300 棉 衣架 要穿 湿重=520\n运动裤 280 化纤 衣架 湿重=380', vol: '20', wind: 'fan', start: '22:30', wear: '06:45' })],
+  ];
+  const api = { DEFAULT, PRESETS, KEYS, FAB, HANG, WIND, MAX_ITEMS, MAX_H, parse, calculate, simulate, suggestions, needDehum, toCSV, toMD, esat, rhoSat, wetBulb, hm, latent, clk, fmt, f0, f1, gram, VERDICT, editLine };
+  if (typeof module === 'object' && module.exports) module.exports = api; else root.AppCore = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+  </script>
+  <script>
+/* 睡前晾的那一杆 · 界面层 */
+(function () {
+  'use strict';
+  const C = window.AppCore;
+  const KEY = 'dry-by-morning:v1';
+  const NAME = '睡前晾的那一杆';
+  const copy = (o) => JSON.parse(JSON.stringify(o));
+  const DEFAULT = C.DEFAULT, PRESETS = C.PRESETS, KEYS = C.KEYS;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const FF = '"PingFang SC","Microsoft YaHei",sans-serif';
+  const f0 = C.f0;
+  let state = copy(DEFAULT);
+  let last = null;
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 隐私模式忽略 */ } }
+  function load() {
+    try {
+      const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+      const s = {};
+      for (const k of KEYS) { if (o[k] == null || typeof o[k] === 'object') return null; s[k] = String(o[k]).slice(0, 2000); }
+      if (!C.WIND[s.wind]) return null;
+      return s;
+    } catch (e) { return null; }
+  }
+  function fill() { KEYS.forEach((k) => { $(k).value = state[k]; }); }
+
+  /* 显示到哪个小时：出门后至少 2 小时，最晚 48 小时 */
+  function span(R) {
+    const fin = R.st.map((x) => x.dryAt).filter((x) => x != null);
+    const mx = fin.length ? Math.max(...fin) : 0;
+    return Math.min(C.MAX_H, Math.max(R.D.wearH + 2, Math.ceil(Math.max(mx, R.D.wearH) + 1)));
+  }
+  function waterCol(fr) {
+    const t = Math.max(0, Math.min(1, fr));
+    const a = [232, 240, 246], b = [31, 84, 130];
+    return 'rgb(' + a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(',') + ')';
+  }
+  function fitText(g, t, w) { let s = String(t); if (g.measureText(s).width <= w) return s; while (s.length > 1 && g.measureText(s + '…').width > w) s = s.slice(0, -1); return s + '…'; }
+  function hourTicks(R, H) { const step = H > 30 ? 6 : H > 14 ? 3 : H > 6 ? 2 : 1; const out = []; const m0 = R.D.startMin; const first = (60 - (m0 % 60)) % 60 / 60; for (let h = first; h <= H + 1e-9; h += 1) { const m = Math.round(m0 + h * 60) % 1440; if ((m / 60) % step === 0) out.push([h, String(m / 60).padStart(2, '0') + ':00']); } return out; }
+
+  /* 时间线：每件一条，颜色深浅 = 剩水占开始含水 */
+  function drawTL(g, R, X, Y, W, Hh, fs) {
+    const D = R.D, S = R.S, n = D.items.length, H = span(R);
+    const nameW = Math.min(150 * fs, W * 0.26), x0 = X + nameW, w = W - nameW - 10 * fs;
+    const lane = Math.max(14 * fs, Math.min(34 * fs, (Hh - 34 * fs) / n)), y0 = Y + 4 * fs;
+    const px = (h) => x0 + w * h / H;
+    g.font = (13 * fs) + 'px ' + FF; g.textBaseline = 'middle';
+    R.st.forEach((x, i) => {
+      const y = y0 + i * lane;
+      g.fillStyle = x.wear ? '#1f2a33' : '#5a6772'; g.font = (x.wear ? 'bold ' : '') + Math.min(14 * fs, lane * 0.6) + 'px ' + FF;
+      g.textAlign = 'left'; g.fillText(fitText(g, x.name, nameW - 8 * fs), X, y + lane / 2);
+      const W0 = x.W0 || 1;
+      S.samples.forEach((s, k) => {
+        if (s.t > H) return;
+        const nx = k + 1 < S.samples.length ? Math.min(H, S.samples[k + 1].t) : H;
+        g.fillStyle = s.W[i] <= S.thr[i] ? '#f3f1e6' : waterCol(s.W[i] / W0);
+        g.fillRect(px(s.t), y + 2 * fs, Math.max(1, px(nx) - px(s.t) + 0.6), lane - 4 * fs);
+      });
+      if (x.dryAt != null && x.dryAt <= H) { g.fillStyle = '#2f6b4f'; g.beginPath(); g.arc(px(x.dryAt), y + lane / 2, Math.min(5 * fs, lane / 3), 0, 7); g.fill(); }
+    });
+    const yb = y0 + n * lane;
+    g.strokeStyle = '#c4ccd2'; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, yb + 2); g.lineTo(x0 + w, yb + 2); g.stroke();
+    g.fillStyle = '#5a6772'; g.font = (11 * fs) + 'px ' + FF; g.textAlign = 'center'; g.textBaseline = 'top';
+    let lastX = -1e9;
+    hourTicks(R, H).forEach(([h, t]) => { const xx = px(h); if (xx - lastX < 34 * fs || xx + g.measureText(t).width / 2 > X + W) return; lastX = xx; g.fillRect(xx, yb, 1, 5 * fs); g.fillText(t, xx, yb + 7 * fs); });
+    const xw = px(D.wearH);
+    g.strokeStyle = '#b3412f'; g.lineWidth = 2 * fs; g.setLineDash([6 * fs, 4 * fs]); g.beginPath(); g.moveTo(xw, Y); g.lineTo(xw, yb + 2); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#b3412f'; g.font = 'bold ' + (12 * fs) + 'px ' + FF; g.textBaseline = 'alphabetic';
+    const lab = '出门 ' + C.clk(D, D.wearH);
+    const lw = g.measureText(lab).width;
+    g.textAlign = 'left'; g.fillText(lab, Math.min(Math.max(xw + 4 * fs, x0), X + W - lw - 2), yb + 30 * fs);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    return yb + 34 * fs;
+  }
+  function drawHum(g, R, X, Y, W, Hh, fs) {
+    const D = R.D, S = R.S, H = span(R);
+    const padL = 36 * fs, x0 = X + padL, w = W - padL - 10 * fs, y0 = Y + 8 * fs, h = Hh - 32 * fs;
+    const px = (t) => x0 + w * t / H, py = (rh) => y0 + h * (1 - rh / 100);
+    g.strokeStyle = '#e3e7ea'; g.lineWidth = 1; g.fillStyle = '#5a6772'; g.font = (11 * fs) + 'px ' + FF; g.textAlign = 'right'; g.textBaseline = 'middle';
+    [0, 40, 80, 100].forEach((v) => { g.beginPath(); g.moveTo(x0, py(v)); g.lineTo(x0 + w, py(v)); g.stroke(); g.fillText(v + '%', x0 - 4 * fs, py(v)); });
+    g.strokeStyle = '#2f5d7c'; g.lineWidth = 2.5 * fs; g.beginPath();
+    S.samples.filter((s) => s.t <= H + 1e-9).forEach((s, k) => { if (k) g.lineTo(px(s.t), py(s.rh)); else g.moveTo(px(s.t), py(s.rh)); });
+    g.stroke();
+    const xw = px(D.wearH); g.strokeStyle = '#b3412f'; g.lineWidth = 2 * fs; g.setLineDash([6 * fs, 4 * fs]); g.beginPath(); g.moveTo(xw, y0); g.lineTo(xw, y0 + h); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#5a6772'; g.textAlign = 'center'; g.textBaseline = 'top';
+    let lastX = -1e9;
+    hourTicks(R, H).forEach(([t, s]) => { const xx = px(t); if (xx - lastX < 34 * fs || xx + g.measureText(s).width / 2 > X + W) return; lastX = xx; g.fillText(s, xx, y0 + h + 6 * fs); });
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  }
+  function sizeCanvas(cv, hCss) {
+    const dpr = window.devicePixelRatio || 1, w = Math.max(280, cv.parentNode.clientWidth - 28);
+    cv.style.width = w + 'px'; cv.style.height = hCss + 'px'; cv.width = Math.round(w * dpr); cv.height = Math.round(hCss * dpr);
+    const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, hCss); return { g, w };
+  }
+  function renderCharts(R) {
+    const n = R.D.items.length, small = window.innerWidth < 520;
+    const lane = small ? 24 : 30;
+    const a = sizeCanvas($('tl'), n * lane + 44); drawTL(a.g, R, 0, 0, a.w, n * lane + 44, 1);
+    const b = sizeCanvas($('hum'), small ? 170 : 210); drawHum(b.g, R, 0, 0, b.w, small ? 170 : 210, 1);
+    $('humNote').textContent = '从 ' + f0(R.D.rh) + '% 开始，最高 ' + f0(R.S.maxRH) + '%，出门时 ' + f0(R.S.wearRH) + '%。湿度越接近 100%，衣服越难往外出水。';
+  }
+  function renderRows(R) {
+    $('rows').innerHTML = R.st.map((x) => '<div class="row' + (x.wear ? ' w' : '') + '"><span title="' + esc(x.name) + '">' + (x.wear ? '★ ' : '') + esc(x.name) + '</span>' +
+      (x.ok ? '<span class="ok">' + esc(C.clk(R.D, x.dryAt)) + ' 干了</span>' : '<span class="no">还湿 ' + esc(C.gram(x.wearW)) + ' 克</span>') + '</div>').join('');
+  }
+  function sugList(sg, need) {
+    $('sugCard').style.display = sg.length || need ? '' : 'none';
+    $('sugs').innerHTML = sg.map((s, k) => '<div class="sug"><span>' + esc(s.text) + '</span><button class="ghost" data-sug="' + s.id + '" data-k="' + k + '">代回</button></div>').join('');
+    [].forEach.call($('sugs').querySelectorAll('button'), (b) => b.addEventListener('click', () => { state = copy(sg[+b.dataset.k].apply); fill(); run(); }));
+    $('need').textContent = needText(need);
+  }
+  function needText(need) {
+    if (!need) return '';
+    return need.L == null ? '只靠除湿机不行：开到每天 60 升，要穿的也赶不上出门。' : '只加除湿机的话，至少要每天除 ' + C.fmt(need.L, 1) + ' 升（按现在填的打折），要穿的才赶得上出门。';
+  }
+
+  function run() {
+    KEYS.forEach((k) => $(k).classList.remove('bad'));
+    $('error').style.display = 'none';
+    try {
+      const R = C.calculate(state);
+      const sg = C.suggestions(state, R), need = C.needDehum(state, R);
+      $('out').style.display = '';
+      $('when').textContent = C.clk(R.D, R.D.wearH) + ' 出门';
+      $('stamp').textContent = R.stamp; $('stamp').className = 'stamp ' + R.verdict;
+      $('sumTxt').textContent = R.summary;
+      $('facts').innerHTML = R.facts.map((f) => '<li>' + esc(f) + '</li>').join('');
+      last = { r: R, sg, need };
+      renderRows(R); renderCharts(R); sugList(sg, need);
+    } catch (e) {
+      last = null;
+      if (e.field) { const el = $(e.field); if (el) el.classList.add('bad'); }
+      $('error').textContent = '算不了：' + e.message; $('error').style.display = 'block';
+      $('out').style.display = 'none';
+    }
+    save();
+  }
+
+  /* ── 导出 ── */
+  function stamp() { const d = new Date(), z = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes()); }
+  function download(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  function wrap(g, t, w) {
+    const NOHEAD = '，。、；：！？）」』%·→｜';
+    const out = []; let line = [];
+    const toks = String(t).match(/[0-9][0-9.:]*(%|\s?(克|件|升|小时))?|[A-Za-z_][A-Za-z0-9_.\-]*|[\s\S]/g) || [];
+    const width = (a) => g.measureText(a.join('')).width;
+    for (const tk of toks) {
+      if (line.length && width(line.concat([tk])) > w) {
+        let carry = [tk];
+        while (line.length > 1 && (NOHEAD.indexOf(carry[0][0]) >= 0 || '（「『'.indexOf(line[line.length - 1]) >= 0)) carry.unshift(line.pop());
+        out.push(line.join(''));
+        line = carry; if (/^\s+$/.test(line[0])) line.shift();
+      } else line.push(tk);
+    }
+    if (line.length) out.push(line.join('')); return out;
+  }
+  function drawPNG(Lx) {
+    const R = Lx.r, D = R.D;
+    const Wd = 1080, H = 1350, X = 64, TW = 952;
+    const cv = document.createElement('canvas'); cv.width = Wd; cv.height = H;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#eef1f4'; g.fillRect(0, 0, Wd, H);
+    g.fillStyle = '#fffdf6'; g.fillRect(32, 32, Wd - 64, H - 64);
+    g.fillStyle = '#2f5d7c'; g.fillRect(32, 32, Wd - 64, 10);
+    g.fillStyle = '#4d5b66'; g.font = '22px ' + FF;
+    g.fillText(fitText(g, NAME + ' · ' + D.temp + ' °C · 湿度 ' + D.rh + '% · ' + D.vol + ' m³ · ' + C.WIND[D.wind].name + (D.dehum ? ' · 除湿 ' + D.dehum + ' 升/天' : ''), TW - 270), X, 92);
+    g.fillStyle = '#1f2a33'; g.font = 'bold 44px ' + FF; g.fillText(C.clk(D, D.wearH) + ' 出门', X, 156);
+    g.save(); g.translate(X + TW - 125, 128); g.rotate(-0.06);
+    const col = R.verdict === 'ok' ? '#2f6b4f' : R.verdict === 'wear' ? '#a5741d' : '#b3412f';
+    g.strokeStyle = g.fillStyle = col; g.lineWidth = 4; g.strokeRect(-120, -32, 240, 56);
+    g.font = 'bold 28px ' + FF; g.textAlign = 'center'; g.fillText(R.stamp, 0, 6); g.restore();
+    let y = 210;
+    g.fillStyle = '#1f2a33'; g.font = 'bold 24px ' + FF;
+    let sl = wrap(g, R.summary, TW); if (sl.length > 3) { g.font = 'bold 21px ' + FF; sl = wrap(g, R.summary, TW); }
+    if (sl.length > 4) { sl = sl.slice(0, 4); sl[3] = fitText(g, sl[3] + '……', TW - 10); }
+    sl.forEach((l) => { g.fillText(l, X, y); y += 34; });
+    y += 4;
+    g.strokeStyle = '#c4ccd2'; g.setLineDash([6, 5]); g.beginPath(); g.moveTo(X, y); g.lineTo(X + TW, y); g.stroke(); g.setLineDash([]);
+    y += 24;
+    /* 小票行：最多 10 行，多了写剩几件 */
+    const n = R.st.length, rowsN = Math.min(n, n > 10 ? 9 : 10), rh = n > 6 ? 34 : 40;
+    g.font = '21px ' + FF;
+    R.st.slice(0, rowsN).forEach((x) => {
+      g.fillStyle = '#1f2a33'; g.font = (x.wear ? 'bold ' : '') + '21px ' + FF; g.textAlign = 'left';
+      g.fillText(fitText(g, (x.wear ? '★ ' : '') + x.name, 520), X, y + 6);
+      const t = x.ok ? C.clk(D, x.dryAt) + ' 干了' : '还湿 ' + C.gram(x.wearW) + ' 克';
+      g.fillStyle = x.ok ? '#2f6b4f' : '#b3412f'; g.font = (x.ok ? '' : 'bold ') + '21px ' + FF; g.textAlign = 'right'; g.fillText(t, X + TW, y + 6); g.textAlign = 'left';
+      y += rh;
+    });
+    if (rowsN < n) { g.fillStyle = '#73808a'; g.font = '18px ' + FF; g.fillText('…… 还有 ' + (n - rowsN) + ' 件，见页面或 CSV', X, y + 4); y += rh; }
+    y += 30;
+    g.fillStyle = '#1f2a33'; g.font = 'bold 20px ' + FF; g.fillText('这一夜每件还剩多少水（越深越湿，红线是出门）', X, y); y += 14;
+    const tlH = Math.min(330, Math.max(160, 30 * n + 40));
+    y = drawTL(g, R, X, y, TW, tlH, n > 12 ? 0.9 : 1.2) + 18;
+    g.font = '18px ' + FF; g.fillStyle = '#1f2a33';
+    const items = Lx.sg.map((q) => '改一样：' + q.text);
+    const nt = needText(Lx.need); if (nt) items.push(nt);
+    items.unshift('屋里湿度从 ' + f0(D.rh) + '% 开始，最高 ' + f0(R.S.maxRH) + '%，出门时 ' + f0(R.S.wearRH) + '%');
+    let shown = 0;
+    for (const f of items) {
+      const ls = wrap(g, '· ' + f, TW);
+      if (y + ls.length * 26 > H - 120) break;
+      ls.forEach((l) => { g.fillText(l, X, y); y += 26; }); y += 3; shown++;
+    }
+    if (shown < items.length) { g.fillStyle = '#73808a'; g.font = '17px ' + FF; g.fillText('…… 还有 ' + (items.length - shown) + ' 条写不下，见页面或 Markdown 导出', X, Math.min(y + 2, H - 104)); }
+    g.fillStyle = '#73808a'; g.font = '18px ' + FF;
+    ['面料含水、克重和通风系数是典型值；温度当作整夜不变。默认例子是虚构的。', '结果是估算，赶时间的那件以手摸为准。'].forEach((l, i) => g.fillText(l, X, H - 76 + i * 27));
+    return Promise.resolve(cv);
+  }
+  function backup() {
+    const R = last.r, D = R.D;
+    return { app: NAME, version: 1, savedAt: stamp(), input: copy(state), result: { summary: R.summary, verdict: R.verdict, stamp: R.stamp, wearAt: C.clk(D, D.wearH), maxRH: R.S.maxRH, wearRH: R.S.wearRH,
+      needDehumL: last.need ? last.need.L : null,
+      items: R.st.map((x) => ({ name: x.name, wear: x.wear, waterStart: x.W0, waterAtWear: x.wearW, dryAt: x.dryAt == null ? null : C.clk(D, x.dryAt), dryHours: x.dryAt, dryBeforeWear: x.ok })) } };
+  }
+  function init() {
+    let dt = null;
+    KEYS.forEach((k) => { const el = $(k); el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => { state[k] = el.value; save(); clearTimeout(dt); if (el.tagName === 'SELECT') run(); else dt = setTimeout(run, 120); }); });
+    PRESETS.forEach((p) => {
+      const b = document.createElement('button'); b.className = 'ghost'; b.textContent = p[0];
+      b.addEventListener('click', () => { state = copy(p[1]); fill(); run(); });
+      $('presets').appendChild(b);
+    });
+    $('reset').addEventListener('click', () => { state = copy(DEFAULT); fill(); run(); });
+    $('dlCSV').addEventListener('click', () => { if (last) download(NAME + '.csv', new Blob(['\ufeff' + C.toCSV(last.r, stamp())], { type: 'text/csv;charset=utf-8' })); });
+    $('dlMD').addEventListener('click', () => { if (last) download(NAME + '.md', new Blob([C.toMD(last.r, stamp(), last.sg, last.need)], { type: 'text/markdown;charset=utf-8' })); });
+    $('dlJSON').addEventListener('click', () => { if (last) download(NAME + '-备份.json', new Blob([JSON.stringify(backup(), null, 2)], { type: 'application/json' })); });
+    $('dlPNG').addEventListener('click', () => { if (last) drawPNG(last).then((cv) => cv.toBlob((b) => download(NAME + '-1080x1350.png', b), 'image/png')); });
+    let rt = null; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (last) renderCharts(last.r); }, 150); });
+    state = load() || copy(DEFAULT);
+    fill(); run();
+    window.__ex = { last: () => last, state: () => state, presets: PRESETS, DEFAULT, drawPNG, backup };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+  </script>
+</body>
+</html>
